@@ -4,7 +4,6 @@ import threading
 from queue import Queue
 
 import torch  # noqa: F401
-
 from .. import backend, error
 from ..commom_utils import vendors, vendors_map
 
@@ -12,6 +11,7 @@ UNSUPPORT_FP64 = [
     vendors.CAMBRICON,
     vendors.ILUVATAR,
     vendors.KUNLUNXIN,
+    vendors.VERISILICON,
 ]
 
 
@@ -62,6 +62,7 @@ class DeviceDetector(object):
             "cambricon": "mlu",
             "mthreads": "musa",
             "iluvatar": "corex",
+            "verisilicon": "vsi",
         }
         for vendor_name, flag in cmd.items():
             if hasattr(torch, flag):
