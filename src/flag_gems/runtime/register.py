@@ -13,7 +13,7 @@ class Register:
         self.device = DeviceDetector()
         self.lib = lib
         # reg_key like 'CUDA', reg_bac_key like AutogradCUDA
-        self.reg_key = self.device.name.upper()
+        self.reg_key = self.device.name.upper() if self.device.name in ["cuda", "amd", "cpu"] else "PrivateUse1"
         self.reg_bac_key = "Autograd" + self.reg_key
         self.all_ops = []
         self.vendor_extend_configs = self.get_vendor_extend_op()
