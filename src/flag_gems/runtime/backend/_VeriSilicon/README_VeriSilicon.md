@@ -39,3 +39,13 @@ print(result.to('cpu'))
 ```
 ## Support op list
 [abs, add, arange, clamp, cos, cumsum, div:true_divide, div:trunc_divide, div:remainder, erf, exp, fill, fill_tensor, full, full_like, mean, mul, neg, ones, ones_like, reciprocal, repeat_interleave_self_int, rms_norm:forward, silu:forward, sin, sub, sum, tanh:forward, zeros, zeros_like]
+
+## Test Accuracy
+Since VPEX is not yet fully developed as a PyTorch extension, if you want to run FlagGems' official tests to test the operators supported on VeriSilicon backend, you need to apply this patch.Once VPEX is fully developed, this patch will no longer be needed.
+```shell
+    git am src/flag_gems/runtime/backend/_VeriSilicon/0001-Official-test-patch-for-vsi.patch
+```
+Example:
+```shell
+    pytest -m abs --ref cpu --mode quick
+```
