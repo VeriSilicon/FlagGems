@@ -30,5 +30,5 @@ vendors_map = {
     "hygon": vendors.HYGON,
     "metax": vendors.METAX,
     "AMD": vendors.AMD,
-    "verisilicon":vendors.VERISILICON,
+    "VeriSilicon":vendors.VERISILICON,
 }

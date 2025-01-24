@@ -1,5 +1,5 @@
 ## Introduction
-Verisilicon support FlagGems as a backend, based on our ZenCompiler, VPEX, triton-vsi-backend and OpenCL driver.
+VeriSilicon support FlagGems as a backend, based on our ZenCompiler, VPEX, triton-vsi-backend and OpenCL driver.
 
 ## Preparation
 1.Install pytorch==2.5.1, and it will also install its dependencies triton==3.1.0
@@ -25,12 +25,11 @@ ln -s <this_repo_root/backend> vsi
 ```
 
 ## Usage
+
 ```python
 import torch
 import vpex
 import flag_gems
-from triton.backends.vsi.driver import VSIDriver
-triton.runtime.driver.set_active(VSIDriver())
 
 A = torch.rand((64, 64), device='vsi', dtype=torch.float32)
 B = torch.rand((64, 64), device='vsi', dtype=torch.float32)
@@ -39,6 +38,4 @@ with flag_gems.use_gems():
 print(result.to('cpu'))
 ```
 ## Support op list
-[abs, add, arange, clamp, cos, cumsum, div:true_divide, div:trunc_divide, div:remainder, erf, exp, fill, fill_tensor,
-full, full_like, mean, mul, neg, ones, ones_like, reciprocal, repeat_interleave_self_int, rms_norm:forward, silu:forward,
-sin, stack, sub, sum, tanh:forward, zeros, zeros_like, diag:2d_to_1d]
+[abs, add, arange, clamp, cos, cumsum, div:true_divide, div:trunc_divide, div:remainder, erf, exp, fill, fill_tensor, full, full_like, mean, mul, neg, ones, ones_like, reciprocal, repeat_interleave_self_int, rms_norm:forward, silu:forward, sin, sub, sum, tanh:forward, zeros, zeros_like]
