@@ -4,6 +4,7 @@ import threading
 from queue import Queue
 
 import torch  # noqa: F401
+
 from .. import backend, error
 from ..commom_utils import vendors, vendors_map
 
@@ -62,7 +63,7 @@ class DeviceDetector(object):
             "cambricon": "mlu",
             "mthreads": "musa",
             "iluvatar": "corex",
-            "verisilicon": "vsi",
+            "VeriSilicon": "vsi",
         }
         for vendor_name, flag in cmd.items():
             if hasattr(torch, flag):

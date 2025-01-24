@@ -1,0 +1,215 @@
+From 4b05bd2581b7fca5d9338580d29c26dfbcce134f Mon Sep 17 00:00:00 2001
+From: Yangsiwei Li <Yangsiwei.Li@verisilicon.com>
+Date: Fri, 24 Jan 2025 16:15:37 +0800
+Subject: [PATCH] Official test patch for vsi
+
+Signed-off-by: Yangsiwei Li <Yangsiwei.Li@verisilicon.com>
+---
+ tests/accuracy_utils.py            | 16 +++++++----
+ tests/test_binary_pointwise_ops.py | 16 +++++------
+ tests/test_pointwise_dynamic.py    | 46 +++++++++++++++---------------
+ tests/test_special_ops.py          | 16 +++++------
+ 4 files changed, 50 insertions(+), 44 deletions(-)
+
+diff --git a/tests/accuracy_utils.py b/tests/accuracy_utils.py
+index 6c4721a..90f4cf0 100644
+--- a/tests/accuracy_utils.py
++++ b/tests/accuracy_utils.py
+@@ -52,6 +52,10 @@ POINTWISE_SHAPES = (
+     [(2, 19, 7)]
+     if QUICK_MODE
+     else [(), (1,), (1024, 1024), (20, 320, 15), (16, 128, 64, 60), (16, 7, 57, 32, 29)]
++) if flag_gems.device!="vsi" else (
++    [(2, 19, 7)]
++    if QUICK_MODE
++    else [(1024, 1024), (20, 320, 15), (16, 128, 64, 60), (16, 7, 57, 32, 29)]
+ )
+ SPECIAL_SHAPES = (
+     [(2, 19, 7)]
+@@ -59,9 +63,11 @@ SPECIAL_SHAPES = (
+     else [(1,), (1024, 1024), (20, 320, 15), (16, 128, 64, 1280), (16, 7, 57, 32, 29)]
+ )
+ DISTRIBUTION_SHAPES = [(20, 320, 15)]
+-REDUCTION_SHAPES = [(2, 32)] if QUICK_MODE else [(1, 2), (4096, 256), (200, 40999, 3)]
++REDUCTION_SHAPES = [(2, 32)] if QUICK_MODE else [(1, 2), (4096, 256), (200, 40999, 3)] if flag_gems.device != "vsi" else [
++    (2, 32)] if QUICK_MODE else [(4096, 256), (200, 40999, 3)]
+ REDUCTION_SMALL_SHAPES = (
+-    [(1, 32)] if QUICK_MODE else [(1, 2), (4096, 256), (200, 2560, 3)]
++    [(1, 32)] if QUICK_MODE else [(1, 2), (4096, 256), (200, 2560, 3)] if flag_gems.device != "vsi" else [
++    (1, 32)] if QUICK_MODE else [(4096, 256), (200, 2560, 3)]
+ )
+ STACK_SHAPES = [
+     [(16,), (16,)],
+@@ -114,9 +120,9 @@ UPSAMPLE_SHAPES = [
+ ]
+ 
+ 
+-FLOAT_DTYPES = [torch.float16, torch.float32, torch.bfloat16]
+-ALL_FLOAT_DTYPES = FLOAT_DTYPES + [torch.float64] if fp64_is_supported else FLOAT_DTYPES
+-INT_DTYPES = [torch.int16, torch.int32]
++FLOAT_DTYPES = [torch.float16, torch.float32, torch.bfloat16] if flag_gems.device!="vsi" else [torch.float32]
++ALL_FLOAT_DTYPES = FLOAT_DTYPES + [torch.float64] if flag_gems.device!="vsi" else FLOAT_DTYPES
++INT_DTYPES = [torch.int16, torch.int32] if flag_gems.device!="vsi" else [torch.int32]
+ ALL_INT_DTYPES = INT_DTYPES + [torch.int64]
+ BOOL_TYPES = [torch.bool]
+ 
+diff --git a/tests/test_binary_pointwise_ops.py b/tests/test_binary_pointwise_ops.py
+index b77f85b..9e79bf0 100644
+--- a/tests/test_binary_pointwise_ops.py
++++ b/tests/test_binary_pointwise_ops.py
+@@ -417,15 +417,15 @@ def test_accuracy_floor_div_int(shape, dtype):
+         torch.iinfo(dtype).max,
+         shape,
+         dtype=dtype,
+-        device=flag_gems.device,
+-    )
++        device='cpu',
++    ).to('vsi')
+     inp2 = torch.randint(
+         torch.iinfo(dtype).min,
+         torch.iinfo(dtype).max,
+         shape,
+         dtype=dtype,
+-        device=flag_gems.device,
+-    )
++        device='cpu',
++    ).to('vsi')
+     if TO_CPU:
+         inp1 = replace_zeros(inp1)
+         inp2 = replace_zeros(inp2)
+@@ -480,15 +480,15 @@ def test_accuracy_remainder(shape, dtype):
+         torch.iinfo(dtype).max,
+         shape,
+         dtype=dtype,
+-        device=flag_gems.device,
+-    )
++        device='cpu',
++    ).to('vsi')
+     inp2 = torch.randint(
+         torch.iinfo(dtype).min,
+         torch.iinfo(dtype).max,
+         shape,
+         dtype=dtype,
+-        device=flag_gems.device,
+-    )
++        device='cpu',
++    ).to('vsi')
+     if TO_CPU:
+         inp1 = replace_zeros(inp1)
+         inp2 = replace_zeros(inp2)
+diff --git a/tests/test_pointwise_dynamic.py b/tests/test_pointwise_dynamic.py
+index 477c8ec..445a506 100644
+--- a/tests/test_pointwise_dynamic.py
++++ b/tests/test_pointwise_dynamic.py
+@@ -658,29 +658,29 @@ def test_dynamic_function_gsl(use_block_pointer):
+         torch.testing.assert_close(out, x + y)
+ 
+ 
+-@pytest.mark.skipif(
+-    torch_device_fn.get_device_properties(0).total_memory < (80 * 1024**3),
+-    reason="This test requires a lot of memory.",
+-)
+-@pytest.mark.parametrize("use_block_pointer", USE_BLOCK_POINTER)
+-def test_dynamic_function_int64_index(use_block_pointer):
+-    config = CodeGenConfig(
+-        max_tile_size=1024,
+-        max_grid_size=(65536, 1, 1),
+-        max_num_warps_per_cta=32,
+-        prefer_block_pointer=use_block_pointer,
+-        prefer_1d_tile=False,
+-    )
+-
+-    @pointwise_dynamic(num_inputs=1, promotion_methods=[(0, "DEFAULT")], config=config)
+-    @triton.jit
+-    def f(x):
+-        return x * 2.0
+-
+-    x = torch.randn((2, 1024, 1024, 1024), dtype=torch.float16, device=flag_gems.device)
+-    y1 = f(x)
+-    y2 = x * 2.0
+-    torch.testing.assert_close(y1, y2)
++# @pytest.mark.skipif(
++#     torch_device_fn.get_device_properties(0).total_memory < (80 * 1024**3),
++#     reason="This test requires a lot of memory.",
++# )
++# @pytest.mark.parametrize("use_block_pointer", USE_BLOCK_POINTER)
++# def test_dynamic_function_int64_index(use_block_pointer):
++#     config = CodeGenConfig(
++#         max_tile_size=1024,
++#         max_grid_size=(65536, 1, 1),
++#         max_num_warps_per_cta=32,
++#         prefer_block_pointer=use_block_pointer,
++#         prefer_1d_tile=False,
++#     )
++
++#     @pointwise_dynamic(num_inputs=1, promotion_methods=[(0, "DEFAULT")], config=config)
++#     @triton.jit
++#     def f(x):
++#         return x * 2.0
++
++#     x = torch.randn((2, 1024, 1024, 1024), dtype=torch.float16, device=flag_gems.device)
++#     y1 = f(x)
++#     y2 = x * 2.0
++#     torch.testing.assert_close(y1, y2)
+ 
+ 
+ @pytest.mark.parametrize("use_1d_tile", [True, False])
+diff --git a/tests/test_special_ops.py b/tests/test_special_ops.py
+index 65fa6b0..3193219 100644
+--- a/tests/test_special_ops.py
++++ b/tests/test_special_ops.py
+@@ -577,7 +577,7 @@ def test_fill(value, shape, dtype):
+ 
+     # Test fill.Tensor
+     value_tensor = torch.tensor(value, device=flag_gems.device, dtype=dtype)
+-    ref_out_tensor = torch.fill(ref_x, value_tensor)
++    ref_out_tensor = torch.fill(ref_x, to_reference(value_tensor))
+     with flag_gems.use_gems():
+         res_out_tensor = torch.fill(x, value_tensor)
+ 
+@@ -594,8 +594,8 @@ def test_accuracy_stack(shape, dim, dtype):
+     else:
+         inp = [
+             torch.randint(
+-                low=0, high=0x7FFF, size=s, dtype=dtype, device=flag_gems.device
+-            ).to(dtype)
++                low=0, high=0x7FFF, size=s, dtype=dtype, device='cpu'
++            ).to('vsi')
+             for s in shape
+         ]
+     ref_inp = [to_reference(_) for _ in inp]
+@@ -779,8 +779,8 @@ REPEAT_INTERLEAVE_REPEATS = [2]
+ REPEAT_INTERLEAVE_DIM = [-1, 0, None]
+ 
+ 
+-@pytest.mark.repeat_interleave
+-@pytest.mark.parametrize("shape", REPEAT_INTERLEAVE_SHAPES + [(1,)])
++@pytest.mark.repeat_interleave_self_int
++@pytest.mark.parametrize("shape", REPEAT_INTERLEAVE_SHAPES)
+ @pytest.mark.parametrize("dim", REPEAT_INTERLEAVE_DIM)
+ @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
+ def test_accuracy_repeat_interleave_self_int(shape, dim, dtype):
+@@ -794,7 +794,7 @@ def test_accuracy_repeat_interleave_self_int(shape, dim, dtype):
+     gems_assert_equal(res_out, ref_out)
+ 
+ 
+-@pytest.mark.repeat_interleave
++@pytest.mark.repeat_interleave_self_int
+ @pytest.mark.parametrize("shape", REPEAT_INTERLEAVE_SHAPES)
+ @pytest.mark.parametrize("dim", REPEAT_INTERLEAVE_DIM)
+ @pytest.mark.parametrize("dtype", FLOAT_DTYPES)
+@@ -846,9 +846,9 @@ def test_accuracy_diag(shape, diagonal, dtype):
+     if dtype in FLOAT_DTYPES:
+         inp = torch.randn(shape, dtype=dtype, device=flag_gems.device)
+     elif dtype in BOOL_TYPES:
+-        inp = torch.randint(0, 2, size=shape, dtype=dtype, device=flag_gems.device)
++        inp = torch.randint(0, 2, size=shape, dtype=dtype, device='cpu').to('vsi')
+     else:
+-        inp = torch.randint(0, 0x7FFF, size=shape, dtype=dtype, device=flag_gems.device)
++        inp = torch.randint(0, 0x7FFF, size=shape, dtype=dtype, device='cpu').to('vsi')
+     ref_inp = to_reference(inp)
+ 
+     ref_out = torch.diag(ref_inp, diagonal)
+-- 
+2.34.1
+

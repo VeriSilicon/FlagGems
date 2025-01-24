@@ -1,3 +1,8 @@
+import vpex
+import triton
+from triton.backends.vsi.driver import VSIDriver
+triton.runtime.driver.set_active(VSIDriver())
+
 from backend_utils import VendorInfoBase  # noqa: E402
 
 from .heuristics_config_utils import HEURISTICS_CONFIGS
@@ -6,7 +11,7 @@ global specific_ops, unused_ops
 specific_ops = None
 unused_ops = None
 vendor_info = VendorInfoBase(
-    vendor_name="verisilicon", device_name="vsi", device_query_cmd=""
+    vendor_name="VeriSilicon", device_name="vsi", device_query_cmd=""
 )
 
 

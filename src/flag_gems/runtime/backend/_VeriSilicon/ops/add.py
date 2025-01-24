@@ -30,6 +30,7 @@ def add_func_scalar_tensor(x, y, alpha):
 
 def add(A, B, *, alpha=1):
     logging.debug("GEMS ADD")
+    print("\n.......test for VERISILICON specific add........\n")
     if isinstance(A, torch.Tensor) and isinstance(B, torch.Tensor):
         return add_func(A, B, alpha)
     elif isinstance(A, torch.Tensor):
