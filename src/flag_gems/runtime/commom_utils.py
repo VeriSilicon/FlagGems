@@ -15,6 +15,7 @@ class vendors(Enum):
     HYGON = 6
     AMD = 7
     AIPU = 8
+    VERISILICON = 9
 
     @classmethod
     def get_all_vendors(cls):
@@ -31,4 +32,5 @@ vendors_map = {
     "metax": vendors.METAX,
     "AMD": vendors.AMD,
     "aipu": vendors.AIPU,
+    "VeriSilicon":vendors.VERISILICON,
 }

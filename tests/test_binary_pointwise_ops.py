@@ -1633,6 +1633,10 @@ def test_accuracy_isclose(shape, dtype, zero_tol, equal_nan, gen_nan):
         torch.rand(1, dtype=torch.float32, device=flag_gems.device).item() * 0.0001
         if not zero_tol
         else 0
+    ) if flag_gems.device != "vsi" else (
+        torch.rand(4, dtype=torch.float32, device=flag_gems.device)[0].item() * 0.0001
+        if not zero_tol
+        else 0
     )
     if dtype in ALL_FLOAT_DTYPES:
         inp1 = torch.randn(shape, dtype=dtype, device=flag_gems.device)
@@ -1649,6 +1653,11 @@ def test_accuracy_isclose(shape, dtype, zero_tol, equal_nan, gen_nan):
         atol = (
             torch.finfo(dtype).tiny
             * torch.randint(0, 4, (1,), device=flag_gems.device).item()
+            if not zero_tol
+            else 0
+        ) if flag_gems.device != "vsi" else (
+            torch.finfo(dtype).tiny
+            * torch.randint(0, 4, (4,), device=flag_gems.device)[0].item()
             if not zero_tol
             else 0
         )
@@ -1682,6 +1691,13 @@ def test_accuracy_isclose(shape, dtype, zero_tol, equal_nan, gen_nan):
                 (
                     torch.finfo(torch.float16).eps
                     * torch.randint(0, 10, (1,), device=flag_gems.device).item()
+                )
+                if not zero_tol
+                else 0
+            ) if flag_gems.device != "vsi" else (
+                (
+                    torch.finfo(torch.float16).eps
+                    * torch.randint(0, 10, (4,), device=flag_gems.device)[0].item()
                 )
                 if not zero_tol
                 else 0
