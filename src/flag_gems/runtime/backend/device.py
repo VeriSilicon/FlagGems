@@ -14,12 +14,15 @@ UNSUPPORT_FP64 = [
     vendors.KUNLUNXIN,
     vendors.MTHREADS,
     vendors.AIPU,
+    vendors.VERISILICON,
 ]
 UNSUPPORT_BF16 = [
     vendors.AIPU,
+    vendors.VERISILICON,
 ]
 UNSUPPORT_INT64 = [
     vendors.AIPU,
+    vendors.VERISILICON,
 ]
 
 

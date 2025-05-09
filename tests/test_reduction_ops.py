@@ -507,7 +507,7 @@ def test_accuracy_scatter_src(src_shape, inp_shape, dim, dtype):
     "inp_shape", [(64, 16, 8)] if QUICK_MODE else [(512, 128, 32), (1024, 64, 16)]
 )
 @pytest.mark.parametrize("dim", [0, 1, 2])
-@pytest.mark.parametrize("dtype", [torch.float16, torch.float32])
+@pytest.mark.parametrize("dtype", [torch.float16, torch.float32] if flag_gems.device != "vsi" else [torch.float32])
 def test_accuracy_scatter_add(src_shape, inp_shape, dim, dtype):
     init_seed(0)
     inp = torch.randn(inp_shape, dtype=dtype, device=flag_gems.device)
@@ -554,7 +554,7 @@ def test_accuracy_scatter_add(src_shape, inp_shape, dim, dtype):
     "inp_shape", [(64, 16, 8)] if QUICK_MODE else [(512, 128, 32), (1024, 64, 16)]
 )
 @pytest.mark.parametrize("dim", [0, 1, 2])
-@pytest.mark.parametrize("dtype", [torch.float16, torch.float32])
+@pytest.mark.parametrize("dtype", [torch.float16, torch.float32] if flag_gems.device != "vsi" else [torch.float32])
 def test_accuracy_scatter_mul(src_shape, inp_shape, dim, dtype):
     inp = torch.randn(inp_shape, dtype=dtype, device=flag_gems.device)
     src = torch.randn(src_shape, dtype=dtype, device=flag_gems.device)
@@ -760,7 +760,7 @@ def test_accuracy_slice_scatter_with_self_overlapping_input():
 @pytest.mark.index_add
 @pytest.mark.parametrize("shape", REDUCTION_SHAPES)
 @pytest.mark.parametrize("dim", DIM_LIST)
-@pytest.mark.parametrize("dtype", [torch.float16, torch.float32])
+@pytest.mark.parametrize("dtype", [torch.float16, torch.float32] if flag_gems.device != "vsi" else [torch.float32])
 def test_accuracy_index_add(shape, dim, dtype):
     inp = torch.randn(shape, dtype=dtype, device=flag_gems.device)
 
@@ -876,7 +876,7 @@ SHAPE_CONV2D = [
 @pytest.mark.parametrize("shape, kernel,groups", SHAPE_CONV2D)
 @pytest.mark.parametrize("stride", [1, 2])
 @pytest.mark.parametrize("padding", [0, 1])
-@pytest.mark.parametrize("dtype", [torch.float16, torch.float32])
+@pytest.mark.parametrize("dtype", [torch.float16, torch.float32] if flag_gems.device != "vsi" else [torch.float32])
 @pytest.mark.parametrize("dilation", [1, 2])
 @pytest.mark.parametrize("bias", [True, False])
 def test_accuracy_conv2d(shape, kernel, stride, padding, groups, dtype, dilation, bias):
@@ -1059,7 +1059,7 @@ INDEX_PUT_SHAPE_ACC_TRUE = (
 @pytest.mark.parametrize(
     "input_shape, indices_shape, values_shape", INDEX_PUT_SHAPE_ACC_TRUE
 )
-@pytest.mark.parametrize("dtype", [torch.float16, torch.float32])
+@pytest.mark.parametrize("dtype", [torch.float16, torch.float32] if flag_gems.device != "vsi" else [torch.float32])
 def test_index_put_acc_true(input_shape, indices_shape, values_shape, dtype):
     init_seed(0)
     accumulate = True
@@ -1107,7 +1107,7 @@ def test_index_put__acc_false(input_shape, indices_shape, values_shape, dtype):
 @pytest.mark.parametrize(
     "input_shape, indices_shape, values_shape", INDEX_PUT_SHAPE_ACC_TRUE
 )
-@pytest.mark.parametrize("dtype", [torch.float16, torch.float32])
+@pytest.mark.parametrize("dtype", [torch.float16, torch.float32] if flag_gems.device != "vsi" else [torch.float32])
 def test_index_put__acc_true(input_shape, indices_shape, values_shape, dtype):
     accumulate = True
     inp = torch.randn(

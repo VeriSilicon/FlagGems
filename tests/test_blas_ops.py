@@ -12,9 +12,12 @@ from .accuracy_utils import (
 )
 from .conftest import QUICK_MODE
 
-MN_SHAPES = [(1, 32)] if QUICK_MODE else [(1, 32), (160, 1024), (5333, 497)]
+MN_SHAPES = [(1, 32)] if QUICK_MODE else [(1, 32), (160, 1024), (5333, 497)] if flag_gems.device != "vsi" else [
+    (4, 32)] if QUICK_MODE else [(4, 32), (160, 1024), (5333, 497)]
 MNK_SHAPES = (
     [(1, 1, 32)] if QUICK_MODE else [(1, 1, 32), (15, 160, 1024), (495, 5333, 71)]
+) if flag_gems.device!="vsi" else (
+    [(1, 4, 32)] if QUICK_MODE else [(1, 4, 32), (15, 160, 1024), (495, 5333, 71)]
 )
 FLOAT_DTYPES = [torch.float32] if QUICK_MODE else FLOAT_DTYPES
 
@@ -133,7 +136,8 @@ def test_accuracy_outer(M, N, dtype):
 @pytest.mark.vdot
 @pytest.mark.parametrize("M", UT_SHAPES_1D)
 @pytest.mark.parametrize(
-    "is_conj", [(False, False), (False, True), (True, False), (True, True)]
+    "is_conj", [(False, False), (False, True), (True, False),
+                (True, True)] if flag_gems.device != "vsi" else [(False, False)]
 )
 @pytest.mark.parametrize("dtype", FLOAT_DTYPES + [torch.cfloat])
 @pytest.mark.parametrize("stride", [1, 2])

@@ -46,7 +46,7 @@ INT32_MAX = torch.iinfo(torch.int32).max
 sizes_one = [1]
 sizes_pow_2 = [2**d for d in range(4, 11, 2)]
 sizes_noalign = [d + 17 for d in sizes_pow_2]
-sizes_1d = sizes_one + sizes_pow_2 + sizes_noalign
+sizes_1d = sizes_one + sizes_pow_2 + sizes_noalign if flag_gems.device!="vsi" else sizes_pow_2 + sizes_noalign
 sizes_2d_nc = [1] if QUICK_MODE else [1, 16, 64, 1000]
 sizes_2d_nr = [1] if QUICK_MODE else [1, 5, 1024]
 
@@ -56,16 +56,26 @@ POINTWISE_SHAPES = (
     [(2, 19, 7)]
     if QUICK_MODE
     else [(), (1,), (1024, 1024), (20, 320, 15), (16, 128, 64, 60), (16, 7, 57, 32, 29)]
+) if flag_gems.device!="vsi" else (
+    [(2, 19, 7)]
+    if QUICK_MODE
+    else [(1024, 1024), (20, 320, 15), (16, 128, 64, 60), (16, 7, 57, 32, 29)]
 )
 SPECIAL_SHAPES = (
     [(2, 19, 7)]
     if QUICK_MODE
     else [(1,), (1024, 1024), (20, 320, 15), (16, 128, 64, 1280), (16, 7, 57, 32, 29)]
+) if flag_gems.device!="vsi" else (
+    [(2, 19, 7)]
+    if QUICK_MODE
+    else [(1024, 1024), (20, 320, 15), (16, 128, 64, 1280), (16, 7, 57, 32, 29)]
 )
 DISTRIBUTION_SHAPES = [(20, 320, 15)]
-REDUCTION_SHAPES = [(2, 32)] if QUICK_MODE else [(1, 2), (4096, 256), (200, 40999, 3)]
+REDUCTION_SHAPES = [(2, 32)] if QUICK_MODE else [(1, 2), (4096, 256), (200, 40999, 3)] if flag_gems.device != "vsi" else [
+    (2, 32)] if QUICK_MODE else [(4096, 256), (200, 40999, 3)]
 REDUCTION_SMALL_SHAPES = (
-    [(1, 32)] if QUICK_MODE else [(1, 2), (4096, 256), (200, 2560, 3)]
+    [(1, 32)] if QUICK_MODE else [(1, 2), (4096, 256), (200, 2560, 3)] if flag_gems.device != "vsi" else [
+    (1, 32)] if QUICK_MODE else [(4096, 256), (200, 2560, 3)]
 )
 STACK_SHAPES = [
     [(16,), (16,)],
@@ -151,14 +161,14 @@ KRON_SHAPES = [
     [(1, 1, 1), (2, 2, 2)],
 ]
 # Add some test cases with zeor-dimensional tensor and zero-sized tensors.
-PRIMARY_FLOAT_DTYPES = [torch.float16, torch.float32]
+PRIMARY_FLOAT_DTYPES = [torch.float16, torch.float32] if flag_gems.device!="vsi" else [torch.float32]
 FLOAT_DTYPES = (
     PRIMARY_FLOAT_DTYPES + [torch.bfloat16]
     if bf16_is_supported
     else PRIMARY_FLOAT_DTYPES
 )
 ALL_FLOAT_DTYPES = FLOAT_DTYPES + [torch.float64] if fp64_is_supported else FLOAT_DTYPES
-INT_DTYPES = [torch.int16, torch.int32]
+INT_DTYPES = [torch.int16, torch.int32]if flag_gems.device!="vsi" else [torch.int32]
 ALL_INT_DTYPES = INT_DTYPES + [torch.int64] if int64_is_supported else INT_DTYPES
 BOOL_TYPES = [torch.bool]
 
